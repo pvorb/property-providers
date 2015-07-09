@@ -1,12 +1,10 @@
 package de.vorb.properties.parsers;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
 public class ValueParsers {
-    private static final Set<String> TRUE_VALUES = new HashSet<>(Arrays.asList("true", "yes", "y", "1"));
-    private static final Set<String> FALSE_VALUES = new HashSet<>(Arrays.asList("false", "no", "n", "0"));
+    private static final ImmutableSet<String> TRUE_VALUES = ImmutableSet.of("true", "yes", "y", "1");
+    private static final ImmutableSet<String> FALSE_VALUES = ImmutableSet.of("false", "no", "n", "0");
 
     public static final ValueParser<Boolean> BOOLEAN_PARSER = new ValueParser<Boolean>() {
         @Override
