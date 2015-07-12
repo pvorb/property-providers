@@ -1,5 +1,11 @@
 package de.vorb.properties.parsers;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+import javax.xml.bind.DatatypeConverter;
+
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class ValueParsers {
@@ -18,6 +24,42 @@ public class ValueParsers {
             } else {
                 throw new IllegalArgumentException(String.format("Invalid boolean property value '%s'", value));
             }
+        }
+    };
+
+    public static final ValueParser<BigInteger> INTEGER_PARSER = new ValueParser<BigInteger>() {
+        @Override
+        public BigInteger parseValue(String value) {
+            return new BigInteger(value);
+        }
+    };
+
+    public static final ValueParser<BigDecimal> DECIMAL_PARSER = new ValueParser<BigDecimal>() {
+        @Override
+        public BigDecimal parseValue(String value) {
+            return new BigDecimal(value);
+        }
+    };
+
+    public static final ValueParser<String> STRING_PARSER = new ValueParser<String>() {
+        @Override
+        public String parseValue(String value) {
+            Preconditions.checkNotNull(value);
+            return value;
+        }
+    };
+
+    public static final ValueParser<byte[]> HEXADECIMAL_PARSER = new ValueParser<byte[]>() {
+        @Override
+        public byte[] parseValue(String value) {
+            return DatatypeConverter.parseHexBinary(value);
+        }
+    };
+
+    public static final ValueParser<byte[]> BASE64_PARSER = new ValueParser<byte[]>() {
+        @Override
+        public byte[] parseValue(String value) {
+            return DatatypeConverter.parseBase64Binary(value);
         }
     };
 
