@@ -25,7 +25,7 @@ public class IntegerValueParserTest {
     }
 
     @Test
-    public void testParseTenInDecimalFormat() {
+    public void testParseTen() {
         Truth.assertThat(INTEGER_PARSER.parseValue("10")).isEqualTo(BigInteger.TEN);
     }
 
@@ -49,17 +49,17 @@ public class IntegerValueParserTest {
     }
 
     @Test(expected = NumberFormatException.class)
-    public void testFraction() {
+    public void testUnsupportedFraction() {
         INTEGER_PARSER.parseValue("1.0");
     }
 
     @Test(expected = NumberFormatException.class)
-    public void testExponent() {
+    public void testUnsupportedExponent() {
         INTEGER_PARSER.parseValue("1e2");
     }
 
     @Test(expected = NumberFormatException.class)
-    public void testHexadecimal() {
+    public void testUnsupportedHexadecimal() {
         INTEGER_PARSER.parseValue("10CEFF");
     }
 }
