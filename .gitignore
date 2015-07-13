@@ -2,6 +2,9 @@
 /.settings/
 
 /bin/
+/build/classes/
+/build/dependency-cache/
+/build/tmp/
 
 /.classpath
 /.project
