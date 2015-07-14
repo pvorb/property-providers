@@ -52,16 +52,36 @@ public class ValueParsers {
     public static final ValueParser<byte[]> HEXADECIMAL_PARSER = new ValueParser<byte[]>() {
         @Override
         public byte[] parseValue(String value) {
-            return DatatypeConverter.parseHexBinary(value);
+            Preconditions.checkArgument(!value.isEmpty(), "Empty string");
+            Preconditions.checkArgument(!isStringSurroundedByWhitespace(value), "String is surrounded by whitespace");
+
+            final String hexCodeAsString;
+            if (value.startsWith("0x")) {
+                hexCodeAsString = value.substring(2);
+            } else if (value.startsWith("#")) {
+                hexCodeAsString = value.substring(1);
+            } else {
+                hexCodeAsString = value;
+            }
+
+            return DatatypeConverter.parseHexBinary(hexCodeAsString);
         }
     };
 
     public static final ValueParser<byte[]> BASE64_PARSER = new ValueParser<byte[]>() {
         @Override
         public byte[] parseValue(String value) {
+            Preconditions.checkArgument(!value.isEmpty(), "Empty string");
+            Preconditions.checkArgument(!isStringSurroundedByWhitespace(value), "String is surrounded by whitespace");
+
             return DatatypeConverter.parseBase64Binary(value);
         }
     };
+
+    private static boolean isStringSurroundedByWhitespace(String value) {
+        return Character.isWhitespace(value.charAt(0))
+                || Character.isWhitespace(value.charAt(value.length() - 1));
+    }
 
     private ValueParsers() {
     }
