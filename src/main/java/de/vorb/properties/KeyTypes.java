@@ -1,4 +1,4 @@
-package de.vorb.properties.parsers;
+package de.vorb.properties;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -8,11 +8,12 @@ import javax.xml.bind.DatatypeConverter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-public class ValueParsers {
+public class KeyTypes {
+
     private static final ImmutableSet<String> TRUE_VALUES = ImmutableSet.of("true", "yes", "y", "1");
     private static final ImmutableSet<String> FALSE_VALUES = ImmutableSet.of("false", "no", "n", "0");
 
-    public static final ValueParser<Boolean> BOOLEAN_PARSER = new ValueParser<Boolean>() {
+    public static final KeyType<Boolean> BOOLEAN = new KeyType<Boolean>() {
         @Override
         public Boolean parseValue(String value) {
             final String lowerCaseValue = value.toLowerCase();
@@ -27,21 +28,21 @@ public class ValueParsers {
         }
     };
 
-    public static final ValueParser<BigInteger> INTEGER_PARSER = new ValueParser<BigInteger>() {
+    public static final KeyType<BigInteger> INTEGER = new KeyType<BigInteger>() {
         @Override
         public BigInteger parseValue(String value) {
             return new BigInteger(value);
         }
     };
 
-    public static final ValueParser<BigDecimal> DECIMAL_PARSER = new ValueParser<BigDecimal>() {
+    public static final KeyType<BigDecimal> DECIMAL = new KeyType<BigDecimal>() {
         @Override
         public BigDecimal parseValue(String value) {
             return new BigDecimal(value);
         }
     };
 
-    public static final ValueParser<String> STRING_PARSER = new ValueParser<String>() {
+    public static final KeyType<String> STRING = new KeyType<String>() {
         @Override
         public String parseValue(String value) {
             Preconditions.checkNotNull(value);
@@ -49,7 +50,7 @@ public class ValueParsers {
         }
     };
 
-    public static final ValueParser<byte[]> HEXADECIMAL_PARSER = new ValueParser<byte[]>() {
+    public static final KeyType<byte[]> HEXADECIMAL = new KeyType<byte[]>() {
         @Override
         public byte[] parseValue(String value) {
             Preconditions.checkArgument(!value.isEmpty(), "Empty string");
@@ -73,7 +74,7 @@ public class ValueParsers {
                 || Character.isWhitespace(value.charAt(value.length() - 1));
     }
 
-    private ValueParsers() {
+    private KeyTypes() {
     }
 
 }
