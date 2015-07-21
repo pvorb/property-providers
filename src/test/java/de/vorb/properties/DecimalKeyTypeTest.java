@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.google.common.truth.Truth;
 
 public class DecimalKeyTypeTest {
+
     @Test
     public void testParseZero() {
         Truth.assertThat(DECIMAL.parseValue("0")).isEqualTo(BigDecimal.ZERO);
@@ -87,4 +88,5 @@ public class DecimalKeyTypeTest {
     public void testUnsupportedHexadecimal() {
         DECIMAL.parseValue("10CEFF");
     }
+
 }

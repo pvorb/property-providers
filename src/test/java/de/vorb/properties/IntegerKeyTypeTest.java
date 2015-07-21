@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.google.common.truth.Truth;
 
 public class IntegerKeyTypeTest {
+
     @Test
     public void testParseZero() {
         Truth.assertThat(INTEGER.parseValue("0")).isEqualTo(BigInteger.ZERO);
@@ -62,4 +63,5 @@ public class IntegerKeyTypeTest {
     public void testUnsupportedHexadecimal() {
         INTEGER.parseValue("10CEFF");
     }
+
 }

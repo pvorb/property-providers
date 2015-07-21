@@ -50,4 +50,5 @@ public class HexadecimalKeyTypeTest {
         final String hexCodeWithTrailingWhitespace = HEX_CODE + " ";
         HEXADECIMAL.parseValue(hexCodeWithTrailingWhitespace);
     }
+
 }
