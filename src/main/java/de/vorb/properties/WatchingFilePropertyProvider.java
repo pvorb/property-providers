@@ -89,7 +89,7 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
     private final Properties defaults;
     private Properties properties;
 
-    private SettableFuture<Void> nextPropertiesUpdate;
+    private SettableFuture<Void> propertiesUpdate;
 
     private ExecutorService watchServiceExecutor;
 
@@ -107,7 +107,7 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
         this.properties = new Properties(defaults);
 
         parentDirectory = propertyFile.getParent();
-        nextPropertiesUpdate = SettableFuture.create();
+        propertiesUpdate = SettableFuture.create();
 
         final boolean isParentADirectory = Files.isDirectory(parentDirectory);
         final boolean isParentReadable = Files.isReadable(parentDirectory);
@@ -153,12 +153,12 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
     }
 
     public ListenableFuture<Void> getPropertiesUpdate() {
-        return nextPropertiesUpdate;
+        return propertiesUpdate;
     }
 
     private void notifyUpdateListeners() {
-        nextPropertiesUpdate.set(null);
-        nextPropertiesUpdate = SettableFuture.create();
+        propertiesUpdate.set(null);
+        propertiesUpdate = SettableFuture.create();
     }
 
 }
