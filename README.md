@@ -1,4 +1,4 @@
-# property-providers [![Build Status](https://travis-ci.org/pvorb/property-providers.svg?branch=develop)](https://travis-ci.org/pvorb/property-providers)
+# property-providers [![Build Status](https://img.shields.io/travis/pvorb/property-providers/develop.svg)](https://travis-ci.org/pvorb/property-providers) [![Code Coverage](https://img.shields.io/codecov/c/github/pvorb/property-providers/develop.svg)](https://codecov.io/github/pvorb/property-providers?branch=develop)
 
 ## Testing
 
