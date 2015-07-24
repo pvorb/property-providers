@@ -161,4 +161,12 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
         propertiesUpdate = SettableFuture.create();
     }
 
+    public static WatchingFilePropertyProvider fromFile(Path propertyFile) {
+        return new WatchingFilePropertyProvider(propertyFile);
+    }
+
+    public static WatchingFilePropertyProvider fromFileUsingDefaults(Path propertyFile, Properties defaults) {
+        return new WatchingFilePropertyProvider(propertyFile, defaults);
+    }
+
 }

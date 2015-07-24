@@ -15,4 +15,8 @@ public class ConstantPropertyProvider implements PropertyProvider {
         return properties;
     }
 
+    public static ConstantPropertyProvider fromProperties(Properties properties) {
+        return new ConstantPropertyProvider(properties);
+    }
+
 }

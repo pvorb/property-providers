@@ -39,7 +39,7 @@ public class WatchingFilePropertyProviderTest {
                 StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE);
 
-        watchingFilePropertyProvider = PropertyProviders.newWatchingProvider(propertyFile);
+        watchingFilePropertyProvider = WatchingFilePropertyProvider.fromFile(propertyFile);
 
     }
 

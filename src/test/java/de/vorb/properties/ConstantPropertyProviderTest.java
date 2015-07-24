@@ -20,7 +20,7 @@ public class ConstantPropertyProviderTest {
     public void setUp() {
         testProperties.setProperty(SOME_KEY, "Some value");
         testProperties.setProperty(SOME_OTHER_KEY, "Some other value");
-        constantPropertyProvider = PropertyProviders.newConstantProvider(testProperties);
+        constantPropertyProvider = ConstantPropertyProvider.fromProperties(testProperties);
     }
 
     @Test
