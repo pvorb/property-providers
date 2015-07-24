@@ -6,6 +6,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 
@@ -32,12 +33,8 @@ public class WatchingFilePropertyProviderTest {
         Files.createDirectories(parentDirectory);
 
         propertyFile = parentDirectory.resolve("test.properties");
-        Files.write(propertyFile,
-                ImmutableList.of(
-                        "test.boolean = no",
-                        "test.integer = 0"),
-                StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE);
+
+        updatePropertyFile("1", "2");
 
         watchingFilePropertyProvider = WatchingFilePropertyProvider.fromFile(propertyFile);
 
@@ -48,8 +45,23 @@ public class WatchingFilePropertyProviderTest {
 
         final Properties initialProperties = watchingFilePropertyProvider.getProperties();
 
-        Truth.assertThat(initialProperties.getProperty("test.boolean")).isEqualTo("no");
-        Truth.assertThat(initialProperties.getProperty("test.integer")).isEqualTo("0");
+        Truth.assertThat(initialProperties.getProperty("test.first")).isEqualTo("1");
+        Truth.assertThat(initialProperties.getProperty("test.second")).isEqualTo("2");
+
+    }
+
+    @Test
+    public void testPropertiesUpdate() throws IOException, InterruptedException, ExecutionException,
+            TimeoutException {
+
+        updatePropertyFile(null, "3");
+
+        watchingFilePropertyProvider.getPropertiesUpdate().get(30, TimeUnit.SECONDS);
+
+        final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
+
+        Truth.assertThat(updatedProperties.getProperty("test.first")).isNull();
+        Truth.assertThat(updatedProperties.getProperty("test.second")).isEqualTo("3");
 
     }
 
@@ -57,18 +69,41 @@ public class WatchingFilePropertyProviderTest {
     public void testSubsequentPropertiesUpdate() throws IOException, InterruptedException, ExecutionException,
             TimeoutException {
 
-        Files.write(propertyFile,
-                ImmutableList.of("test.integer = 1"),
-                StandardCharsets.UTF_8,
-                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+        updatePropertyFile("2", "1");
 
         watchingFilePropertyProvider.getPropertiesUpdate().get(30, TimeUnit.SECONDS);
 
-        final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
+        final Properties updatedProperties1 = watchingFilePropertyProvider.getProperties();
 
-        Truth.assertThat(updatedProperties.getProperty("test.boolean")).isNull();
+        updatePropertyFile("3", "4");
 
-        Truth.assertThat(updatedProperties.getProperty("test.integer")).isEqualTo("1");
+        watchingFilePropertyProvider.getPropertiesUpdate().get(30, TimeUnit.SECONDS);
+
+        final Properties updatedProperties2 = watchingFilePropertyProvider.getProperties();
+
+        // assert that a retrieved Properties object is not updated after a change
+        Truth.assertThat(updatedProperties1.getProperty("test.first")).isEqualTo("2");
+        Truth.assertThat(updatedProperties1.getProperty("test.second")).isEqualTo("1");
+
+        // assert that the second change reflects the new values
+        Truth.assertThat(updatedProperties2.getProperty("test.first")).isEqualTo("3");
+        Truth.assertThat(updatedProperties2.getProperty("test.second")).isEqualTo("4");
 
     }
+
+    private void updatePropertyFile(String first, String second) throws IOException {
+        final List<String> lines = Lists.newArrayList();
+
+        if (first != null) {
+            lines.add("test.first = " + first);
+        }
+
+        if (second != null) {
+            lines.add("test.second = " + second);
+        }
+
+        Files.write(propertyFile, lines, StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
 }
