@@ -40,6 +40,7 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
 
         private void watchForFileChanges() {
             try {
+
                 while (true) {
                     final WatchKey key = watcher.take();
 
@@ -51,7 +52,10 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
                         notifyUpdateListeners();
                     }
 
-                    key.reset();
+                    final boolean valid = key.reset();
+                    if (!valid) {
+                        break;
+                    }
                 }
             } catch (InterruptedException e) {
                 logger.warn(
@@ -119,7 +123,7 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
         readPropertyFile();
 
         try {
-            final WatchService watcher = parentDirectory.getFileSystem().newWatchService();
+            final WatchService watcher = createWatchService(parentDirectory);
             parentDirectory.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
 
             watchServiceExecutor = Executors.newSingleThreadExecutor();
@@ -159,6 +163,10 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
     private void notifyUpdateListeners() {
         propertiesUpdate.set(null);
         propertiesUpdate = SettableFuture.create();
+    }
+
+    protected WatchService createWatchService(Path path) throws IOException {
+        return path.getFileSystem().newWatchService();
     }
 
     public static WatchingFilePropertyProvider fromFile(Path propertyFile) {

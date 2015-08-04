@@ -1,11 +1,13 @@
 package de.vorb.properties;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -14,6 +16,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.jimfs.Jimfs;
@@ -21,22 +25,54 @@ import com.google.common.truth.Truth;
 
 public class WatchingFilePropertyProviderTest {
 
+    private final Logger logger = LoggerFactory.getLogger(WatchingFilePropertyProvider.class);
+
+    private FileSystem fileSystem;
+
     private Path propertyFile;
     private WatchingFilePropertyProvider watchingFilePropertyProvider;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
 
-        final FileSystem fs = Jimfs.newFileSystem();
+        fileSystem = Jimfs.newFileSystem();
 
-        final Path parentDirectory = fs.getPath("test-directory");
+        final Path parentDirectory = fileSystem.getPath("test-directory");
         Files.createDirectories(parentDirectory);
 
         propertyFile = parentDirectory.resolve("test.properties");
 
         updatePropertyFile("1", "2");
 
-        watchingFilePropertyProvider = WatchingFilePropertyProvider.fromFile(propertyFile);
+        initPropertyProvider();
+
+    }
+
+    private void initPropertyProvider() throws ClassNotFoundException, NoSuchFieldException,
+            SecurityException {
+
+        final Class<?> pollingWatchServiceClass = Class.forName("com.google.common.jimfs.PollingWatchService");
+
+        final Field pollingTime = pollingWatchServiceClass.getDeclaredField("pollingTime");
+        pollingTime.setAccessible(true);
+
+        final Field timeUnit = pollingWatchServiceClass.getDeclaredField("timeUnit");
+        timeUnit.setAccessible(true);
+
+        watchingFilePropertyProvider = new WatchingFilePropertyProvider(propertyFile) {
+            @Override
+            protected WatchService createWatchService(Path path) throws IOException {
+                final WatchService watchService = super.createWatchService(path);
+                try {
+                    pollingTime.set(watchService, 5);
+                    timeUnit.set(watchService, TimeUnit.MILLISECONDS);
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    logger.warn("Could not reduce the polling time of the watch service via reflection. "
+                            + "Tests might take longer than usual.", e);
+                }
+                return watchService;
+            }
+        };
 
     }
 
@@ -56,12 +92,11 @@ public class WatchingFilePropertyProviderTest {
 
         updatePropertyFile(null, "3");
 
-        watchingFilePropertyProvider.getPropertiesUpdate().get(30, TimeUnit.SECONDS);
+        watchingFilePropertyProvider.getPropertiesUpdate().get(10, TimeUnit.SECONDS);
 
         final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
 
-        Truth.assertThat(updatedProperties.getProperty("test.first")).isNull();
-        Truth.assertThat(updatedProperties.getProperty("test.second")).isEqualTo("3");
+        assertThatPropertiesMatch(updatedProperties, null, "3");
 
     }
 
@@ -69,25 +104,18 @@ public class WatchingFilePropertyProviderTest {
     public void testSubsequentPropertiesUpdate() throws IOException, InterruptedException, ExecutionException,
             TimeoutException {
 
-        updatePropertyFile("2", "1");
+        testPropertiesUpdate();
 
-        watchingFilePropertyProvider.getPropertiesUpdate().get(30, TimeUnit.SECONDS);
-
-        final Properties updatedProperties1 = watchingFilePropertyProvider.getProperties();
+        final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
 
         updatePropertyFile("3", "4");
 
-        watchingFilePropertyProvider.getPropertiesUpdate().get(30, TimeUnit.SECONDS);
+        watchingFilePropertyProvider.getPropertiesUpdate().get(10, TimeUnit.SECONDS);
 
-        final Properties updatedProperties2 = watchingFilePropertyProvider.getProperties();
+        final Properties subsequentlyUpdatedProperties = watchingFilePropertyProvider.getProperties();
 
-        // assert that a retrieved Properties object is not updated after a change
-        Truth.assertThat(updatedProperties1.getProperty("test.first")).isEqualTo("2");
-        Truth.assertThat(updatedProperties1.getProperty("test.second")).isEqualTo("1");
-
-        // assert that the second change reflects the new values
-        Truth.assertThat(updatedProperties2.getProperty("test.first")).isEqualTo("3");
-        Truth.assertThat(updatedProperties2.getProperty("test.second")).isEqualTo("4");
+        assertThatPropertiesMatch(updatedProperties, null, "3");
+        assertThatPropertiesMatch(subsequentlyUpdatedProperties, "3", "4");
 
     }
 
@@ -103,7 +131,13 @@ public class WatchingFilePropertyProviderTest {
         }
 
         Files.write(propertyFile, lines, StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.SYNC);
+    }
+
+    private void assertThatPropertiesMatch(Properties properties, String first, String second) {
+        Truth.assertThat(properties.getProperty("test.first")).isEqualTo(first);
+        Truth.assertThat(properties.getProperty("test.second")).isEqualTo(second);
     }
 
 }
