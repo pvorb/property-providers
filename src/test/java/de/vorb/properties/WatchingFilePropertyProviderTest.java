@@ -140,4 +140,20 @@ public class WatchingFilePropertyProviderTest {
         Truth.assertThat(properties.getProperty("test.second")).isEqualTo(second);
     }
 
+    @Test
+    public void testFromFile() {
+        WatchingFilePropertyProvider.fromFile(propertyFile);
+    }
+
+    @Test
+    public void testFromFileUsingDefaults() {
+        final Properties defaults = new Properties();
+        defaults.setProperty("test.default", "default");
+
+        final WatchingFilePropertyProvider watchingFilePropertyProvider =
+                WatchingFilePropertyProvider.fromFileUsingDefaults(propertyFile, defaults);
+
+        Truth.assertThat(watchingFilePropertyProvider.getProperties().getProperty("test.default")).isEqualTo("default");
+    }
+
 }
