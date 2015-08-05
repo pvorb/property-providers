@@ -108,14 +108,14 @@ public class WatchingFilePropertyProviderTest {
 
         final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
 
-        updatePropertyFile("3", "4");
+        updatePropertyFile("1", null);
 
         watchingFilePropertyProvider.getPropertiesUpdate().get(10, TimeUnit.SECONDS);
 
         final Properties subsequentlyUpdatedProperties = watchingFilePropertyProvider.getProperties();
 
         assertThatPropertiesMatch(updatedProperties, null, "3");
-        assertThatPropertiesMatch(subsequentlyUpdatedProperties, "3", "4");
+        assertThatPropertiesMatch(subsequentlyUpdatedProperties, "1", null);
 
     }
 
