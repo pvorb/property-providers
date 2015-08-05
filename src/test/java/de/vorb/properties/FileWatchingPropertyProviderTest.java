@@ -23,14 +23,14 @@ import com.google.common.collect.Lists;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 
-public class WatchingFilePropertyProviderTest {
+public class FileWatchingPropertyProviderTest {
 
-    private final Logger logger = LoggerFactory.getLogger(WatchingFilePropertyProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(FileWatchingPropertyProvider.class);
 
     private FileSystem fileSystem;
 
     private Path propertyFile;
-    private WatchingFilePropertyProvider watchingFilePropertyProvider;
+    private FileWatchingPropertyProvider watchingFilePropertyProvider;
 
     @Before
     public void setUp() throws Exception {
@@ -59,7 +59,7 @@ public class WatchingFilePropertyProviderTest {
         final Field timeUnit = pollingWatchServiceClass.getDeclaredField("timeUnit");
         timeUnit.setAccessible(true);
 
-        watchingFilePropertyProvider = new WatchingFilePropertyProvider(propertyFile) {
+        watchingFilePropertyProvider = new FileWatchingPropertyProvider(propertyFile) {
             @Override
             protected WatchService createWatchService(Path path) throws IOException {
                 final WatchService watchService = super.createWatchService(path);
@@ -142,7 +142,7 @@ public class WatchingFilePropertyProviderTest {
 
     @Test
     public void testFromFile() {
-        WatchingFilePropertyProvider.fromFile(propertyFile);
+        FileWatchingPropertyProvider.fromFile(propertyFile);
     }
 
     @Test
@@ -150,8 +150,8 @@ public class WatchingFilePropertyProviderTest {
         final Properties defaults = new Properties();
         defaults.setProperty("test.default", "default");
 
-        final WatchingFilePropertyProvider watchingFilePropertyProvider =
-                WatchingFilePropertyProvider.fromFileUsingDefaults(propertyFile, defaults);
+        final FileWatchingPropertyProvider watchingFilePropertyProvider =
+                FileWatchingPropertyProvider.fromFileUsingDefaults(propertyFile, defaults);
 
         Truth.assertThat(watchingFilePropertyProvider.getProperties().getProperty("test.default")).isEqualTo("default");
     }

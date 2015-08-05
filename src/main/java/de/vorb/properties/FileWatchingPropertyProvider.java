@@ -21,9 +21,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
-public class WatchingFilePropertyProvider implements PropertyProvider {
+public class FileWatchingPropertyProvider implements PropertyProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(WatchingFilePropertyProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileWatchingPropertyProvider.class);
 
     private class PropertyFileUpdater implements Runnable {
 
@@ -97,7 +97,7 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
 
     private ExecutorService watchServiceExecutor;
 
-    WatchingFilePropertyProvider(Path propertyFile, Properties defaults) {
+    FileWatchingPropertyProvider(Path propertyFile, Properties defaults) {
 
         final boolean isRegularFile = Files.isRegularFile(propertyFile);
         final boolean isReadable = Files.isReadable(propertyFile);
@@ -133,7 +133,7 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
         }
     }
 
-    WatchingFilePropertyProvider(Path propertyFile) {
+    FileWatchingPropertyProvider(Path propertyFile) {
         this(propertyFile, new Properties());
     }
 
@@ -169,12 +169,12 @@ public class WatchingFilePropertyProvider implements PropertyProvider {
         return path.getFileSystem().newWatchService();
     }
 
-    public static WatchingFilePropertyProvider fromFile(Path propertyFile) {
-        return new WatchingFilePropertyProvider(propertyFile);
+    public static FileWatchingPropertyProvider fromFile(Path propertyFile) {
+        return new FileWatchingPropertyProvider(propertyFile);
     }
 
-    public static WatchingFilePropertyProvider fromFileUsingDefaults(Path propertyFile, Properties defaults) {
-        return new WatchingFilePropertyProvider(propertyFile, defaults);
+    public static FileWatchingPropertyProvider fromFileUsingDefaults(Path propertyFile, Properties defaults) {
+        return new FileWatchingPropertyProvider(propertyFile, defaults);
     }
 
 }
