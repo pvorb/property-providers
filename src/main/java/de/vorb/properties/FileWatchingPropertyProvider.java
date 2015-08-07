@@ -10,6 +10,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
-public class FileWatchingPropertyProvider implements PropertyProvider {
+public class FileWatchingPropertyProvider implements PropertyProvider, TypedProperties {
 
     private static final Logger logger = LoggerFactory.getLogger(FileWatchingPropertyProvider.class);
 
@@ -163,6 +164,20 @@ public class FileWatchingPropertyProvider implements PropertyProvider {
     private void notifyUpdateListeners() {
         propertiesUpdate.set(null);
         propertiesUpdate = SettableFuture.create();
+    }
+
+    @Override
+    public <T> Optional<T> getProperty(String key, KeyType<T> type) {
+        return type.parseValue(getUntypedValue(key));
+    }
+
+    @Override
+    public <T> T getPropertyOrDefaultValue(String key, T defaultValue, KeyType<T> type) {
+        return getProperty(key, type).orElse(defaultValue);
+    }
+
+    private String getUntypedValue(String key) {
+        return getProperties().getProperty(key);
     }
 
     protected WatchService createWatchService(Path path) throws IOException {

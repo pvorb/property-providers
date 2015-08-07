@@ -1,7 +1,9 @@
 package de.vorb.properties;
 
+import java.util.Optional;
+
 public interface KeyType<T> {
 
-    T parseValue(String value);
+    Optional<T> parseValue(String value);
 
 }

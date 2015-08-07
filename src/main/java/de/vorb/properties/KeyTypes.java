@@ -2,6 +2,7 @@ package de.vorb.properties;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Optional;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -15,13 +16,17 @@ public class KeyTypes {
 
     public static final KeyType<Boolean> BOOLEAN = new KeyType<Boolean>() {
         @Override
-        public Boolean parseValue(String value) {
+        public Optional<Boolean> parseValue(String value) {
+            if (value == null) {
+                return Optional.empty();
+            }
+
             final String lowerCaseValue = value.toLowerCase();
 
             if (TRUE_VALUES.contains(lowerCaseValue)) {
-                return Boolean.TRUE;
+                return Optional.of(Boolean.TRUE);
             } else if (FALSE_VALUES.contains(lowerCaseValue)) {
-                return Boolean.FALSE;
+                return Optional.of(Boolean.FALSE);
             } else {
                 throw new IllegalArgumentException(String.format("Invalid boolean property value '%s'", value));
             }
@@ -30,29 +35,40 @@ public class KeyTypes {
 
     public static final KeyType<BigInteger> INTEGER = new KeyType<BigInteger>() {
         @Override
-        public BigInteger parseValue(String value) {
-            return new BigInteger(value);
+        public Optional<BigInteger> parseValue(String value) {
+            if (value == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of(new BigInteger(value));
+            }
         }
     };
 
     public static final KeyType<BigDecimal> DECIMAL = new KeyType<BigDecimal>() {
         @Override
-        public BigDecimal parseValue(String value) {
-            return new BigDecimal(value);
+        public Optional<BigDecimal> parseValue(String value) {
+            if (value == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of(new BigDecimal(value));
+            }
         }
     };
 
     public static final KeyType<String> STRING = new KeyType<String>() {
         @Override
-        public String parseValue(String value) {
-            Preconditions.checkNotNull(value);
-            return value;
+        public Optional<String> parseValue(String value) {
+            return Optional.ofNullable(value);
         }
     };
 
     public static final KeyType<byte[]> HEXADECIMAL = new KeyType<byte[]>() {
         @Override
-        public byte[] parseValue(String value) {
+        public Optional<byte[]> parseValue(String value) {
+            if (value == null) {
+                return Optional.empty();
+            }
+
             Preconditions.checkArgument(!value.isEmpty(), "Empty string");
             Preconditions.checkArgument(!isStringSurroundedByWhitespace(value), "String is surrounded by whitespace");
 
@@ -65,7 +81,7 @@ public class KeyTypes {
                 hexCodeAsString = value;
             }
 
-            return DatatypeConverter.parseHexBinary(hexCodeAsString);
+            return Optional.of(DatatypeConverter.parseHexBinary(hexCodeAsString));
         }
     };
 
