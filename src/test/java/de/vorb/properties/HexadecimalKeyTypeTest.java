@@ -2,6 +2,8 @@ package de.vorb.properties;
 
 import static de.vorb.properties.KeyTypes.HEXADECIMAL;
 
+import java.util.Optional;
+
 import org.junit.Test;
 
 import com.google.common.truth.Truth;
@@ -13,24 +15,23 @@ public class HexadecimalKeyTypeTest {
 
     @Test
     public void testUnprefixed() {
-        Truth.assertThat(HEXADECIMAL.parseValue(HEX_CODE)).isEqualTo(correspondingBytes);
+        Truth.assertThat(HEXADECIMAL.parseValue(HEX_CODE).get()).isEqualTo(correspondingBytes);
     }
 
     @Test
     public void test0xPrefix() {
         final String hexCodeWith0xPrefix = "0x" + HEX_CODE;
-        Truth.assertThat(HEXADECIMAL.parseValue(hexCodeWith0xPrefix)).isEqualTo(correspondingBytes);
+        Truth.assertThat(HEXADECIMAL.parseValue(hexCodeWith0xPrefix).get()).isEqualTo(correspondingBytes);
     }
 
     @Test
     public void testHashPrefix() {
         final String hexCodeWithHashPrefix = "#" + HEX_CODE;
-        Truth.assertThat(HEXADECIMAL.parseValue(hexCodeWithHashPrefix)).isEqualTo(correspondingBytes);
+        Truth.assertThat(HEXADECIMAL.parseValue(hexCodeWithHashPrefix).get()).isEqualTo(correspondingBytes);
     }
 
-    @Test(expected = NullPointerException.class)
     public void testNull() {
-        HEXADECIMAL.parseValue(null);
+        Truth.assertThat(HEXADECIMAL.parseValue(null)).isEqualTo(Optional.empty());
     }
 
     @Test(expected = IllegalArgumentException.class)

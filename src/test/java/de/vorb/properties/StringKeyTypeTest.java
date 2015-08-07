@@ -2,6 +2,8 @@ package de.vorb.properties;
 
 import static de.vorb.properties.KeyTypes.STRING;
 
+import java.util.Optional;
+
 import org.junit.Test;
 
 import com.google.common.truth.Truth;
@@ -10,17 +12,15 @@ public class StringKeyTypeTest {
 
     @Test
     public void testParseEmptyString() {
-        Truth.assertThat(STRING.parseValue("")).isEqualTo("");
+        Truth.assertThat(STRING.parseValue("").get()).isEqualTo("");
     }
 
     @Test
     public void testParseArbitraryString() {
-        Truth.assertThat(STRING.parseValue("some arbitrary string")).isEqualTo("some arbitrary string");
+        Truth.assertThat(STRING.parseValue("some arbitrary string").get()).isEqualTo("some arbitrary string");
     }
 
-    @Test(expected = NullPointerException.class)
     public void testParseNull() {
-        STRING.parseValue(null);
+        Truth.assertThat(STRING.parseValue(null)).isEqualTo(Optional.empty());
     }
-
 }
