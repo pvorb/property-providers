@@ -12,15 +12,20 @@ import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+import de.vorb.properties.event.PropertiesUpdate;
+import de.vorb.properties.event.PropertiesUpdateListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class FileWatchingPropertyProvider implements PropertyProvider, TypedProperties {
 
@@ -36,32 +41,24 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
 
         @Override
         public void run() {
-            watchForFileChanges();
-        }
-
-        private void watchForFileChanges() {
             try {
+                final WatchKey key = watcher.poll();
 
-                while (true) {
-                    final WatchKey key = watcher.take();
-
-                    final List<WatchEvent<?>> pendingEvents = key.pollEvents();
-
-                    if (hasPropertyFileBeenUpdated(pendingEvents)) {
-                        readPropertyFile();
-
-                        notifyUpdateListeners();
-                    }
-
-                    final boolean valid = key.reset();
-                    if (!valid) {
-                        break;
-                    }
+                if (key == null) {
+                    return;
                 }
-            } catch (InterruptedException e) {
-                logger.warn(
-                        "The property file '{}' is no longer being watched due to an interruption of the WatchService.",
-                        propertyFile, e);
+
+                final List<WatchEvent<?>> pendingEvents = key.pollEvents();
+
+                if (hasPropertyFileBeenUpdated(pendingEvents)) {
+                    final Properties oldProperties = properties;
+                    readPropertyFile();
+                    final Properties newProperties = properties;
+
+                    notifyUpdateListeners(oldProperties, newProperties);
+                }
+
+                key.reset();
             } catch (ClosedWatchServiceException e) {
                 logger.warn("The watch service on property file '{}' has been closed.", propertyFile);
             }
@@ -86,6 +83,15 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
                 return false;
             }
         }
+
+        private void notifyUpdateListeners(Properties oldProperties, Properties newProperties) {
+
+            final PropertiesUpdate updateEvent = PropertiesUpdate.replacedProperties(oldProperties, newProperties);
+
+            for (PropertiesUpdateListener listener : propertiesUpdateListeners) {
+                listener.handlePropertiesUpdate(updateEvent);
+            }
+        }
     }
 
     private final Path propertyFile;
@@ -94,9 +100,9 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
     private final Properties defaults;
     private Properties properties;
 
-    private SettableFuture<Void> propertiesUpdate;
+    private final List<PropertiesUpdateListener> propertiesUpdateListeners = Lists.newCopyOnWriteArrayList();
 
-    private ExecutorService watchServiceExecutor;
+    private ScheduledExecutorService watchServiceExecutor;
 
     FileWatchingPropertyProvider(Path propertyFile, Properties defaults) {
 
@@ -112,7 +118,6 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
         this.properties = new Properties(defaults);
 
         parentDirectory = propertyFile.getParent();
-        propertiesUpdate = SettableFuture.create();
 
         final boolean isParentADirectory = Files.isDirectory(parentDirectory);
         final boolean isParentReadable = Files.isReadable(parentDirectory);
@@ -127,8 +132,14 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
             final WatchService watcher = createWatchService(parentDirectory);
             parentDirectory.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
 
-            watchServiceExecutor = Executors.newSingleThreadExecutor();
-            watchServiceExecutor.execute(new PropertyFileUpdater(watcher));
+            final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                    .setNameFormat(FileWatchingPropertyProvider.class.getName() + "-thread-%d")
+                    .setDaemon(true)
+                    .build();
+
+            watchServiceExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
+            // watchServiceExecutor.execute(new PropertyFileUpdater(watcher));
+            watchServiceExecutor.scheduleAtFixedRate(new PropertyFileUpdater(watcher), 100, 100, TimeUnit.MILLISECONDS);
         } catch (IOException e) {
             logger.error("Could not watch the parent directory of the requested property file '{}'", propertyFile, e);
         }
@@ -136,6 +147,14 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
 
     FileWatchingPropertyProvider(Path propertyFile) {
         this(propertyFile, new Properties());
+    }
+
+    public void addPropertiesUpdateListener(PropertiesUpdateListener listener) {
+        propertiesUpdateListeners.add(listener);
+    }
+
+    public void removePropertiesUpdateListener(PropertiesUpdateListener listener) {
+        propertiesUpdateListeners.remove(listener);
     }
 
     private void readPropertyFile() {
@@ -155,15 +174,6 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
     @Override
     public Properties getProperties() {
         return properties;
-    }
-
-    public ListenableFuture<Void> getPropertiesUpdate() {
-        return propertiesUpdate;
-    }
-
-    private void notifyUpdateListeners() {
-        propertiesUpdate.set(null);
-        propertiesUpdate = SettableFuture.create();
     }
 
     @Override
