@@ -9,26 +9,29 @@ import com.google.common.truth.Truth;
 
 public class ConstantPropertyProviderTest {
 
-    private static final String SOME_OTHER_KEY = "some.other.key";
-
-    private static final String SOME_KEY = "some.key";
+    private static final String UNTYPED_KEY = "key.untyped";
+    private static final String TYPED_KEY = "key.typed";
 
     private final Properties testProperties = new Properties();
-    private PropertyProvider constantPropertyProvider;
+    private ConstantPropertyProvider constantPropertyProvider;
 
     @Before
     public void setUp() {
-        testProperties.setProperty(SOME_KEY, "Some value");
-        testProperties.setProperty(SOME_OTHER_KEY, "Some other value");
+        testProperties.setProperty(UNTYPED_KEY, "Arbitrary value");
+        testProperties.setProperty(Boolean.class.getSimpleName(), "true");
+
         constantPropertyProvider = ConstantPropertyProvider.fromProperties(testProperties);
     }
 
     @Test
     public void testGetProperties() {
-        Truth.assertThat(constantPropertyProvider.getProperties().getProperty(SOME_KEY))
-                .isEqualTo(testProperties.getProperty(SOME_KEY));
-        Truth.assertThat(constantPropertyProvider.getProperties().getProperty(SOME_OTHER_KEY))
-                .isEqualTo(testProperties.getProperty(SOME_OTHER_KEY));
+        Truth.assertThat(constantPropertyProvider.getProperties().getProperty(UNTYPED_KEY))
+                .isEqualTo(testProperties.getProperty(UNTYPED_KEY));
     }
 
+    @Test
+    public void testGetTypedProperty() {
+        Truth.assertThat(constantPropertyProvider.getProperty(TYPED_KEY, KeyTypes.BOOLEAN))
+                .isEqualTo(KeyTypes.BOOLEAN.parseValue(testProperties.getProperty(TYPED_KEY)));
+    }
 }

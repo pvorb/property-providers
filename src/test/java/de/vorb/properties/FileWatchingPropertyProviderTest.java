@@ -10,16 +10,21 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import de.vorb.properties.event.PropertiesUpdateListener;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 
@@ -35,7 +40,7 @@ public class FileWatchingPropertyProviderTest {
     @Before
     public void setUp() throws Exception {
 
-        fileSystem = Jimfs.newFileSystem();
+        fileSystem = Jimfs.newFileSystem(Configuration.unix());
 
         final Path parentDirectory = fileSystem.getPath("test-directory");
         Files.createDirectories(parentDirectory);
@@ -45,6 +50,14 @@ public class FileWatchingPropertyProviderTest {
         updatePropertyFile("1", "2");
 
         initPropertyProvider();
+
+    }
+
+    @After
+    public void tearDown() throws IOException {
+
+        Files.delete(propertyFile);
+        Files.delete(propertyFile.getParent());
 
     }
 
@@ -64,7 +77,7 @@ public class FileWatchingPropertyProviderTest {
             protected WatchService createWatchService(Path path) throws IOException {
                 final WatchService watchService = super.createWatchService(path);
                 try {
-                    pollingTime.set(watchService, 5);
+                    pollingTime.set(watchService, 50);
                     timeUnit.set(watchService, TimeUnit.MILLISECONDS);
                 } catch (IllegalArgumentException | IllegalAccessException e) {
                     logger.warn("Could not reduce the polling time of the watch service via reflection. "
@@ -87,34 +100,39 @@ public class FileWatchingPropertyProviderTest {
     }
 
     @Test
-    public void testPropertiesUpdate() throws IOException, InterruptedException, ExecutionException,
-            TimeoutException {
-
-        updatePropertyFile(null, "3");
-
-        watchingFilePropertyProvider.getPropertiesUpdate().get(10, TimeUnit.SECONDS);
-
-        final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
-
-        assertThatPropertiesMatch(updatedProperties, null, "3");
-
-    }
-
-    @Test
     public void testSubsequentPropertiesUpdate() throws IOException, InterruptedException, ExecutionException,
             TimeoutException {
 
-        testPropertiesUpdate();
+        final CountDownLatch firstUpdateCountDownLatch = new CountDownLatch(1);
 
-        final Properties updatedProperties = watchingFilePropertyProvider.getProperties();
+        final PropertiesUpdateListener countDownFirstLatch = listener -> {
+            firstUpdateCountDownLatch.countDown();
+        };
+
+        watchingFilePropertyProvider.addPropertiesUpdateListener(countDownFirstLatch);
+
+        updatePropertyFile(null, "3");
+
+        Truth.assertThat(firstUpdateCountDownLatch.await(1, TimeUnit.SECONDS)).named("updateCountDownLatch").isTrue();
+
+        watchingFilePropertyProvider.removePropertiesUpdateListener(countDownFirstLatch);
+
+        final CountDownLatch subsequentUpdateCountDownLatch = new CountDownLatch(1);
+
+        final PropertiesUpdateListener countDownSubsequentLatch = listener -> {
+            subsequentUpdateCountDownLatch.countDown();
+        };
+
+        watchingFilePropertyProvider.addPropertiesUpdateListener(countDownSubsequentLatch);
 
         updatePropertyFile("1", null);
 
-        watchingFilePropertyProvider.getPropertiesUpdate().get(10, TimeUnit.SECONDS);
+        Truth.assertThat(subsequentUpdateCountDownLatch.await(1, TimeUnit.SECONDS)).named("updateCountDownLatch")
+                .isTrue();
+
+        watchingFilePropertyProvider.removePropertiesUpdateListener(countDownSubsequentLatch);
 
         final Properties subsequentlyUpdatedProperties = watchingFilePropertyProvider.getProperties();
-
-        assertThatPropertiesMatch(updatedProperties, null, "3");
         assertThatPropertiesMatch(subsequentlyUpdatedProperties, "1", null);
 
     }
