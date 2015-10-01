@@ -2,6 +2,7 @@ package de.vorb.properties;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -9,12 +10,14 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.WatchService;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import de.vorb.properties.event.PropertiesUpdate;
 import de.vorb.properties.event.PropertiesUpdateListener;
 
 import org.junit.After;
@@ -23,8 +26,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 
@@ -40,10 +43,10 @@ public class FileWatchingPropertyProviderTest {
     @Before
     public void setUp() throws Exception {
 
-        fileSystem = Jimfs.newFileSystem(Configuration.unix());
+        fileSystem = Jimfs.newFileSystem();
 
         final Path parentDirectory = fileSystem.getPath("test-directory");
-        Files.createDirectories(parentDirectory);
+        Files.createDirectory(parentDirectory);
 
         propertyFile = parentDirectory.resolve("test.properties");
 
@@ -56,8 +59,14 @@ public class FileWatchingPropertyProviderTest {
     @After
     public void tearDown() throws IOException {
 
-        Files.delete(propertyFile);
-        Files.delete(propertyFile.getParent());
+        final Path parentDir = propertyFile.getParent();
+        Files.newDirectoryStream(parentDir).forEach(file -> {
+            try {
+                Files.deleteIfExists(file);
+            } catch (IOException e) {
+            }
+        });
+        Files.delete(parentDir);
 
     }
 
@@ -100,13 +109,17 @@ public class FileWatchingPropertyProviderTest {
     }
 
     @Test
-    public void testSubsequentPropertiesUpdate() throws IOException, InterruptedException, ExecutionException,
-            TimeoutException {
+    public void testPropertiesUpdates() throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
         final CountDownLatch firstUpdateCountDownLatch = new CountDownLatch(1);
 
-        final PropertiesUpdateListener countDownFirstLatch = listener -> {
+        final PropertiesUpdateListener countDownFirstLatch = (PropertiesUpdate update) -> {
             firstUpdateCountDownLatch.countDown();
+
+            Truth.assertThat(update.getException().isPresent()).isFalse();
+            Truth.assertThat(update.getUpdatedPropertyKeys()).containsExactly("test.first", "test.second");
+            Truth.assertThat(update.getNewProperties()).doesNotContainKey("test.first");
+            Truth.assertThat(update.getNewProperties()).containsEntry("test.second", "3");
         };
 
         watchingFilePropertyProvider.addPropertiesUpdateListener(countDownFirstLatch);
@@ -119,8 +132,13 @@ public class FileWatchingPropertyProviderTest {
 
         final CountDownLatch subsequentUpdateCountDownLatch = new CountDownLatch(1);
 
-        final PropertiesUpdateListener countDownSubsequentLatch = listener -> {
+        final PropertiesUpdateListener countDownSubsequentLatch = (PropertiesUpdate update) -> {
             subsequentUpdateCountDownLatch.countDown();
+
+            Truth.assertThat(update.getException().isPresent()).isFalse();
+            Truth.assertThat(update.getUpdatedPropertyKeys()).containsExactly("test.first", "test.second");
+            Truth.assertThat(update.getNewProperties()).containsEntry("test.first", "1");
+            Truth.assertThat(update.getNewProperties()).doesNotContainKey("test.second");
         };
 
         watchingFilePropertyProvider.addPropertiesUpdateListener(countDownSubsequentLatch);
@@ -160,7 +178,9 @@ public class FileWatchingPropertyProviderTest {
 
     @Test
     public void testFromFile() {
-        FileWatchingPropertyProvider.fromFile(propertyFile);
+        final Properties props = FileWatchingPropertyProvider.fromFile(propertyFile).getProperties();
+
+        assertThatPropertiesMatch(props, "1", "2");
     }
 
     @Test
@@ -171,7 +191,35 @@ public class FileWatchingPropertyProviderTest {
         final FileWatchingPropertyProvider watchingFilePropertyProvider =
                 FileWatchingPropertyProvider.fromFileUsingDefaults(propertyFile, defaults);
 
-        Truth.assertThat(watchingFilePropertyProvider.getProperties().getProperty("test.default")).isEqualTo("default");
+        Truth.assertThat(watchingFilePropertyProvider.getProperty("test.default", KeyTypes.STRING))
+                .isEqualTo(Optional.of("default"));
     }
 
+    @Test
+    public void testGetPropertyOrDefaultValueWithDefinedProperty() {
+        final BigInteger definedValue = watchingFilePropertyProvider.getPropertyOrDefaultValue("test.first",
+                BigInteger.ZERO, KeyTypes.INTEGER);
+
+        Truth.assertThat(definedValue).isEqualTo(BigInteger.ONE);
+    }
+
+    @Test
+    public void testGetPropertyOrDefaultValueWithUndefinedProperty() {
+        final BigInteger defaultValue = watchingFilePropertyProvider.getPropertyOrDefaultValue("test.undefined",
+                BigInteger.ZERO, KeyTypes.INTEGER);
+
+        Truth.assertThat(defaultValue).isEqualTo(BigInteger.ZERO);
+    }
+
+    @Test
+    public void testUpdateOfOtherFileDoesNotCauseUpdateOfProperties() throws IOException {
+        final Properties initialInstance = watchingFilePropertyProvider.getProperties();
+
+        final Path otherFile = propertyFile.resolveSibling("other.file");
+
+        Files.createFile(otherFile);
+        Files.write(otherFile, ImmutableList.of("content"));
+
+        Truth.assertThat(watchingFilePropertyProvider.getProperties()).isSameAs(initialInstance);
+    }
 }
