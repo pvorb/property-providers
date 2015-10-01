@@ -11,6 +11,7 @@ public class ConstantPropertyProviderTest {
 
     private static final String UNTYPED_KEY = "key.untyped";
     private static final String TYPED_KEY = "key.typed";
+    private static final String UNDEFINED_KEY = "key.undefined";
 
     private final Properties testProperties = new Properties();
     private ConstantPropertyProvider constantPropertyProvider;
@@ -18,7 +19,7 @@ public class ConstantPropertyProviderTest {
     @Before
     public void setUp() {
         testProperties.setProperty(UNTYPED_KEY, "Arbitrary value");
-        testProperties.setProperty(Boolean.class.getSimpleName(), "true");
+        testProperties.setProperty(TYPED_KEY, "true");
 
         constantPropertyProvider = ConstantPropertyProvider.fromProperties(testProperties);
     }
@@ -33,5 +34,17 @@ public class ConstantPropertyProviderTest {
     public void testGetTypedProperty() {
         Truth.assertThat(constantPropertyProvider.getProperty(TYPED_KEY, KeyTypes.BOOLEAN))
                 .isEqualTo(KeyTypes.BOOLEAN.parseValue(testProperties.getProperty(TYPED_KEY)));
+    }
+
+    @Test
+    public void testGetPropertyOrDefaultValueWithDefinedProperty() {
+        Truth.assertThat(constantPropertyProvider.getPropertyOrDefaultValue("key.typed", false,
+                KeyTypes.BOOLEAN)).isTrue();
+    }
+
+    @Test
+    public void testGetPropertyOrDefaultValueWithUndefinedProperty() {
+        Truth.assertThat(constantPropertyProvider.getPropertyOrDefaultValue(UNDEFINED_KEY, true,
+                KeyTypes.BOOLEAN)).isTrue();
     }
 }
