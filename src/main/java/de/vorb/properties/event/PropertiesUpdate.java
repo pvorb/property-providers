@@ -23,7 +23,17 @@ public interface PropertiesUpdate {
 
             changedPropertyKeys =
                     Stream.concat(oldProperties.keySet().stream(), newProperties.keySet().stream())
-                            .map(k -> (String) k)
+                            .map(key -> (String) key)
+                            .filter(key -> {
+                                final String oldValue = oldProperties.getProperty(key);
+                                final String newValue = newProperties.getProperty(key);
+
+                                if ((oldValue == null || newValue == null) && oldValue != newValue) {
+                                    return true;
+                                } else {
+                                    return !oldValue.equals(newValue);
+                                }
+                            })
                             .collect(Collectors.toSet());
         }
 
