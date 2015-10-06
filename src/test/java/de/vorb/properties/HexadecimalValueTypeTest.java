@@ -1,6 +1,6 @@
 package de.vorb.properties;
 
-import static de.vorb.properties.KeyTypes.HEXADECIMAL;
+import static de.vorb.properties.StandardValueTypes.HEXADECIMAL;
 
 import java.util.Optional;
 
@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.google.common.truth.Truth;
 
-public class HexadecimalKeyTypeTest {
+public class HexadecimalValueTypeTest {
 
     private static final String HEX_CODE = "CAFE";
     private static final byte[] correspondingBytes = new byte[] { (byte) 0xCA, (byte) 0xFE };

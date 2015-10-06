@@ -191,14 +191,14 @@ public class FileWatchingPropertyProviderTest {
         final FileWatchingPropertyProvider watchingFilePropertyProvider =
                 FileWatchingPropertyProvider.fromFileUsingDefaults(propertyFile, defaults);
 
-        Truth.assertThat(watchingFilePropertyProvider.getProperty("test.default", KeyTypes.STRING))
+        Truth.assertThat(watchingFilePropertyProvider.getProperty("test.default", StandardValueTypes.STRING))
                 .isEqualTo(Optional.of("default"));
     }
 
     @Test
     public void testGetPropertyOrDefaultValueWithDefinedProperty() {
         final BigInteger definedValue = watchingFilePropertyProvider.getPropertyOrDefaultValue("test.first",
-                BigInteger.ZERO, KeyTypes.INTEGER);
+                BigInteger.ZERO, StandardValueTypes.INTEGER);
 
         Truth.assertThat(definedValue).isEqualTo(BigInteger.ONE);
     }
@@ -206,7 +206,7 @@ public class FileWatchingPropertyProviderTest {
     @Test
     public void testGetPropertyOrDefaultValueWithUndefinedProperty() {
         final BigInteger defaultValue = watchingFilePropertyProvider.getPropertyOrDefaultValue("test.undefined",
-                BigInteger.ZERO, KeyTypes.INTEGER);
+                BigInteger.ZERO, StandardValueTypes.INTEGER);
 
         Truth.assertThat(defaultValue).isEqualTo(BigInteger.ZERO);
     }

@@ -32,19 +32,19 @@ public class ConstantPropertyProviderTest {
 
     @Test
     public void testGetTypedProperty() {
-        Truth.assertThat(constantPropertyProvider.getProperty(TYPED_KEY, KeyTypes.BOOLEAN))
-                .isEqualTo(KeyTypes.BOOLEAN.parseValue(testProperties.getProperty(TYPED_KEY)));
+        Truth.assertThat(constantPropertyProvider.getProperty(TYPED_KEY, StandardValueTypes.BOOLEAN))
+                .isEqualTo(StandardValueTypes.BOOLEAN.parseValue(testProperties.getProperty(TYPED_KEY)));
     }
 
     @Test
     public void testGetPropertyOrDefaultValueWithDefinedProperty() {
         Truth.assertThat(constantPropertyProvider.getPropertyOrDefaultValue("key.typed", false,
-                KeyTypes.BOOLEAN)).isTrue();
+                StandardValueTypes.BOOLEAN)).isTrue();
     }
 
     @Test
     public void testGetPropertyOrDefaultValueWithUndefinedProperty() {
         Truth.assertThat(constantPropertyProvider.getPropertyOrDefaultValue(UNDEFINED_KEY, true,
-                KeyTypes.BOOLEAN)).isTrue();
+                StandardValueTypes.BOOLEAN)).isTrue();
     }
 }
