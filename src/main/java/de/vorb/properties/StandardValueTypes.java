@@ -9,12 +9,19 @@ import javax.xml.bind.DatatypeConverter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-public class KeyTypes {
+/**
+ * Standard value types.
+ */
+public class StandardValueTypes {
 
     private static final ImmutableSet<String> TRUE_VALUES = ImmutableSet.of("true", "yes", "y", "1");
     private static final ImmutableSet<String> FALSE_VALUES = ImmutableSet.of("false", "no", "n", "0");
 
-    public static final KeyType<Boolean> BOOLEAN = new KeyType<Boolean>() {
+    /**
+     * Boolean value type. Accepted values are <code>true</code>, <code>false</code>, <code>yes</code>, <code>no</code>,
+     * <code>y</code>, <code>n</code>, <code>1</code> and <code>0</code>.
+     */
+    public static final ValueType<Boolean> BOOLEAN = new ValueType<Boolean>() {
         @Override
         public Optional<Boolean> parseValue(String value) {
             if (value == null) {
@@ -33,7 +40,10 @@ public class KeyTypes {
         }
     };
 
-    public static final KeyType<BigInteger> INTEGER = new KeyType<BigInteger>() {
+    /**
+     * Value type for all kinds of integer values.
+     */
+    public static final ValueType<BigInteger> INTEGER = new ValueType<BigInteger>() {
         @Override
         public Optional<BigInteger> parseValue(String value) {
             if (value == null) {
@@ -44,7 +54,10 @@ public class KeyTypes {
         }
     };
 
-    public static final KeyType<BigDecimal> DECIMAL = new KeyType<BigDecimal>() {
+    /**
+     * Value type for all kinds of decimal (non-integer) values.
+     */
+    public static final ValueType<BigDecimal> DECIMAL = new ValueType<BigDecimal>() {
         @Override
         public Optional<BigDecimal> parseValue(String value) {
             if (value == null) {
@@ -55,14 +68,21 @@ public class KeyTypes {
         }
     };
 
-    public static final KeyType<String> STRING = new KeyType<String>() {
+    /**
+     * Value type for all kinds of string values.
+     */
+    public static final ValueType<String> STRING = new ValueType<String>() {
         @Override
         public Optional<String> parseValue(String value) {
             return Optional.ofNullable(value);
         }
     };
 
-    public static final KeyType<byte[]> HEXADECIMAL = new KeyType<byte[]>() {
+    /**
+     * Value type for hexadecimal values. Values may be plain hex strings or can optionally begin with either
+     * <code>0x</code> or <code>#</code>.
+     */
+    public static final ValueType<byte[]> HEXADECIMAL = new ValueType<byte[]>() {
         @Override
         public Optional<byte[]> parseValue(String value) {
             if (value == null) {
@@ -74,9 +94,9 @@ public class KeyTypes {
 
             final String hexCodeAsString;
             if (value.startsWith("0x")) {
-                hexCodeAsString = value.substring(2);
+                hexCodeAsString = value.substring("0x".length());
             } else if (value.startsWith("#")) {
-                hexCodeAsString = value.substring(1);
+                hexCodeAsString = value.substring("#".length());
             } else {
                 hexCodeAsString = value;
             }
@@ -90,7 +110,7 @@ public class KeyTypes {
                 || Character.isWhitespace(value.charAt(value.length() - 1));
     }
 
-    private KeyTypes() {
+    private StandardValueTypes() {
     }
 
 }

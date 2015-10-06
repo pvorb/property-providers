@@ -177,12 +177,12 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
     }
 
     @Override
-    public <T> Optional<T> getProperty(String key, KeyType<T> type) {
+    public <T> Optional<T> getProperty(String key, ValueType<T> type) {
         return type.parseValue(getUntypedValue(key));
     }
 
     @Override
-    public <T> T getPropertyOrDefaultValue(String key, T defaultValue, KeyType<T> type) {
+    public <T> T getPropertyOrDefaultValue(String key, T defaultValue, ValueType<T> type) {
         return getProperty(key, type).orElse(defaultValue);
     }
 

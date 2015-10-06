@@ -1,6 +1,6 @@
 package de.vorb.properties;
 
-import static de.vorb.properties.KeyTypes.BOOLEAN;
+import static de.vorb.properties.StandardValueTypes.BOOLEAN;
 
 import java.util.Optional;
 
@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.google.common.truth.Truth;
 
-public class BooleanKeyTypeTest {
+public class BooleanValueTypeTest {
 
     @Test
     public void testParseTrue() {
