@@ -1,6 +1,6 @@
 package de.vorb.properties;
 
-import static de.vorb.properties.KeyTypes.INTEGER;
+import static de.vorb.properties.StandardValueTypes.INTEGER;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.google.common.truth.Truth;
 
-public class IntegerKeyTypeTest {
+public class IntegerValueTypeTest {
 
     @Test
     public void testParseZero() {

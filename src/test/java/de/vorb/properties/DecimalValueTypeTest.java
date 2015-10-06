@@ -1,6 +1,6 @@
 package de.vorb.properties;
 
-import static de.vorb.properties.KeyTypes.DECIMAL;
+import static de.vorb.properties.StandardValueTypes.DECIMAL;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.google.common.truth.Truth;
 
-public class DecimalKeyTypeTest {
+public class DecimalValueTypeTest {
 
     @Test
     public void testParseZero() {
