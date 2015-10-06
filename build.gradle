@@ -48,7 +48,13 @@ artifacts {
     archives javadocJar, sourcesJar
 }
 
+ext.signRelease = !("$System.env.TRAVIS" == "true")
+
 signing {
+    required {
+        signRelease
+    }
+
     sign configurations.archives
 }
 
