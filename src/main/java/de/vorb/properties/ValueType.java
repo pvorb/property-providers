@@ -15,7 +15,7 @@ public interface ValueType<T> {
      * 
      * @param value
      *            string representation of the value
-     * @return
+     * @return parsed value
      */
     Optional<T> parseValue(String value);
 

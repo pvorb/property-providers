@@ -158,6 +158,7 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
      * Adds a listener to the set of listeners.
      * 
      * @param listener
+     *            will be added to the set of listeners
      */
     public void addPropertiesUpdateListener(PropertiesUpdateListener listener) {
         propertiesUpdateListeners.add(listener);
@@ -167,6 +168,7 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
      * Removes a listener from the set of listeners.
      * 
      * @param listener
+     *            will be removed from the set of listeners
      */
     public void removePropertiesUpdateListener(PropertiesUpdateListener listener) {
         propertiesUpdateListeners.remove(listener);
