@@ -6,22 +6,38 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Update event that is triggered, when a change of properties has been detected.
+ */
 public interface PropertiesUpdate {
+
+    /**
+     * @return optional exception that occurred while the update was detected
+     */
     Optional<Throwable> getException();
 
+    /**
+     * @return the new properties
+     */
     Properties getNewProperties();
 
+    /**
+     * @return the set of property keys that changed during this update
+     */
     Set<String> getUpdatedPropertyKeys();
 
+    /**
+     * Represents a successful {@link PropertiesUpdate}.
+     */
     static class SuccessfulPropertiesUpdate implements PropertiesUpdate {
-        private final Set<String> changedPropertyKeys;
+        private final Set<String> updatedPropertyKeys;
         private final Properties newProperties;
 
         public SuccessfulPropertiesUpdate(Properties oldProperties, Properties newProperties) {
 
             this.newProperties = newProperties;
 
-            changedPropertyKeys =
+            updatedPropertyKeys =
                     Stream.concat(oldProperties.keySet().stream(), newProperties.keySet().stream())
                             .map(key -> (String) key)
                             .filter(key -> {
@@ -49,10 +65,18 @@ public interface PropertiesUpdate {
 
         @Override
         public Set<String> getUpdatedPropertyKeys() {
-            return changedPropertyKeys;
+            return updatedPropertyKeys;
         }
     }
 
+    /**
+     * @param oldProperties
+     *            properties before the event occurred
+     * @param newProperties
+     *            properties after the event occurred
+     * @return a {@link PropertiesUpdate} that represents the replacement of {@code oldProperties} by
+     *         {@code newProperties}.
+     */
     static PropertiesUpdate replacedProperties(Properties oldProperties, Properties newProperties) {
         return new SuccessfulPropertiesUpdate(oldProperties, newProperties);
     }

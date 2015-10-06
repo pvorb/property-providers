@@ -1,6 +1,6 @@
 package de.vorb.properties;
 
-import static de.vorb.properties.KeyTypes.STRING;
+import static de.vorb.properties.StandardValueTypes.STRING;
 
 import java.util.Optional;
 
@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.google.common.truth.Truth;
 
-public class StringKeyTypeTest {
+public class StringValueTypeTest {
 
     @Test
     public void testParseEmptyString() {
