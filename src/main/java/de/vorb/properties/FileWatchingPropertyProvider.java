@@ -12,6 +12,7 @@ import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -24,9 +25,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+/**
+ * A {@link PropertyProvider} that listens to file system events on a given properties file and informs registered
+ * {@link PropertiesUpdateListener}s of {@link PropertiesUpdate}s.
+ */
 public class FileWatchingPropertyProvider implements PropertyProvider, TypedProperties {
 
     private static final Logger logger = LoggerFactory.getLogger(FileWatchingPropertyProvider.class);
@@ -100,7 +105,7 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
     private final Properties defaults;
     private Properties properties;
 
-    private final List<PropertiesUpdateListener> propertiesUpdateListeners = Lists.newCopyOnWriteArrayList();
+    private final Set<PropertiesUpdateListener> propertiesUpdateListeners = Sets.newCopyOnWriteArraySet();
 
     private ScheduledExecutorService watchServiceExecutor;
 
@@ -149,10 +154,20 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
         this(propertyFile, new Properties());
     }
 
+    /**
+     * Adds a listener to the set of listeners.
+     * 
+     * @param listener
+     */
     public void addPropertiesUpdateListener(PropertiesUpdateListener listener) {
         propertiesUpdateListeners.add(listener);
     }
 
+    /**
+     * Removes a listener from the set of listeners.
+     * 
+     * @param listener
+     */
     public void removePropertiesUpdateListener(PropertiesUpdateListener listener) {
         propertiesUpdateListeners.remove(listener);
     }
@@ -194,10 +209,26 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
         return path.getFileSystem().newWatchService();
     }
 
+    /**
+     * Creates a new {@link FileWatchingPropertyProvider} from a properties file.
+     * 
+     * @param propertyFile
+     *            a regular file that is readable and has a parent directory
+     * @return new {@link FileWatchingPropertyProvider}
+     */
     public static FileWatchingPropertyProvider fromFile(Path propertyFile) {
         return new FileWatchingPropertyProvider(propertyFile);
     }
 
+    /**
+     * Creates a new {@link FileWatchingPropertyProvider} from a properties file backed by the given default properties.
+     * 
+     * @param propertyFile
+     *            a regular file that is readable and has a parent directory
+     * @param defaults
+     *            default properties
+     * @return new {@link FileWatchingPropertyProvider}
+     */
     public static FileWatchingPropertyProvider fromFileUsingDefaults(Path propertyFile, Properties defaults) {
         return new FileWatchingPropertyProvider(propertyFile, defaults);
     }

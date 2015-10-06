@@ -3,6 +3,9 @@ package de.vorb.properties;
 import java.util.Optional;
 import java.util.Properties;
 
+/**
+ * A {@link PropertyProvider} that does not change its values.
+ */
 public class ConstantPropertyProvider implements PropertyProvider, TypedProperties {
 
     private final Properties properties;
@@ -30,6 +33,13 @@ public class ConstantPropertyProvider implements PropertyProvider, TypedProperti
         return getProperties().getProperty(key);
     }
 
+    /**
+     * Creates a {@link ConstantPropertyProvider} from a given {@link Properties} object.
+     * 
+     * @param properties
+     *            source properties
+     * @return a new {@link ConstantPropertyProvider}
+     */
     public static ConstantPropertyProvider fromProperties(Properties properties) {
         return new ConstantPropertyProvider(properties);
     }
