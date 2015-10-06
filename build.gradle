@@ -1,0 +1,116 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'jacoco'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+
+group = 'de.vorb'
+archivesBaseName = 'property-providers'
+version = '1.0.0'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    // common
+    compile 'com.google.guava:guava:18.0'
+
+    // logging
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    compile 'ch.qos.logback:logback-core:1.1.3'
+    compile 'ch.qos.logback:logback-classic:1.1.3'
+
+    // testing
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.google.truth:truth:0.27'
+    testCompile 'com.google.jimfs:jimfs:1.0'
+}
+
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+ext.signRelease = !("$System.env.TRAVIS" == "true")
+
+signing {
+    required {
+        signRelease
+    }
+
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
+
+            repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name 'Property Providers'
+                packaging 'jar'
+                artifactId 'property-providers'
+                description 'A library that allows for type safe loading of .properties files and automatic change detection'
+                url 'https://github.com/pvorb/property-providers'
+
+                scm {
+                    connection 'scm:git:git://github.com/pvorb/property-providers.git'
+                    developerConnection 'scm:git:ssh://git@github.com:pvorb/property-providers.git'
+                    url 'https://github.com/pvorb/property-providers'
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'http://vorba.ch/license/mit.html'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'pvorb'
+                        name 'Paul Vorbach'
+                        email 'paul@vorba.ch'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+
+check.dependsOn jacocoTestReport
