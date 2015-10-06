@@ -26,6 +26,9 @@ public interface PropertiesUpdate {
      */
     Set<String> getUpdatedPropertyKeys();
 
+    /**
+     * Represents a successful {@link PropertiesUpdate}.
+     */
     static class SuccessfulPropertiesUpdate implements PropertiesUpdate {
         private final Set<String> updatedPropertyKeys;
         private final Properties newProperties;
@@ -66,6 +69,14 @@ public interface PropertiesUpdate {
         }
     }
 
+    /**
+     * @param oldProperties
+     *            properties before the event occurred
+     * @param newProperties
+     *            properties after the event occurred
+     * @return a {@link PropertiesUpdate} that represents the replacement of {@code oldProperties} by
+     *         {@code newProperties}.
+     */
     static PropertiesUpdate replacedProperties(Properties oldProperties, Properties newProperties) {
         return new SuccessfulPropertiesUpdate(oldProperties, newProperties);
     }
