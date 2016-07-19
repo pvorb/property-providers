@@ -1,4 +1,4 @@
-# property-providers [![Build Status](https://travis-ci.org/pvorb/property-providers.svg?branch=master)](https://travis-ci.org/pvorb/property-providers) [![Code Coverage](http://codecov.io/github/pvorb/property-providers/coverage.svg?branch=master)](http://codecov.io/github/pvorb/property-providers?branch=master)
+# property-providers [![Build Status](https://travis-ci.org/pvorb/property-providers.svg?branch=master)](https://travis-ci.org/pvorb/property-providers) [![Code Coverage](https://codecov.io/gh/pvorb/property-providers/branch/master/graph/badge.svg)](https://codecov.io/gh/pvorb/property-providers)
 
 property-providers is a lightweight library for providing
 `java.util.Properties` for your projects. At its heart there is the
