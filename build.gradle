@@ -7,7 +7,7 @@ apply plugin: 'signing'
 
 group = 'de.vorb'
 archivesBaseName = 'property-providers'
-version = '2.0.0'
+version = '2.0.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     // common
-    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.guava:guava:19.0'
 
     // logging
     compile 'org.slf4j:slf4j-api:1.7.7'
