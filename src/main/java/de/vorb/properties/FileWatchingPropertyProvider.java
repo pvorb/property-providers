@@ -2,6 +2,7 @@ package de.vorb.properties;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -176,7 +177,7 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
 
     private void readPropertyFile() {
 
-        try (final BufferedReader propertyFileReader = Files.newBufferedReader(propertyFile)) {
+        try (final BufferedReader propertyFileReader = Files.newBufferedReader(propertyFile, StandardCharsets.UTF_8)) {
             final Properties newProperties = new Properties(defaults);
 
             newProperties.load(propertyFileReader);
