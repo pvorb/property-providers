@@ -123,7 +123,7 @@ public class FileWatchingPropertyProvider implements PropertyProvider, TypedProp
         this.defaults = defaults;
         this.properties = new Properties(defaults);
 
-        parentDirectory = propertyFile.getParent();
+        parentDirectory = propertyFile.toAbsolutePath().getParent();
 
         final boolean isParentADirectory = Files.isDirectory(parentDirectory);
         final boolean isParentReadable = Files.isReadable(parentDirectory);
